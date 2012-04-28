@@ -10,11 +10,22 @@ class JabberTest < Service::TestCase
       end
     end
 
+    class MUCClient
+      def initialize(parent)
+        @parent = parent
+      end
+
+      def join(conference)
+        @parent.conferences << conference
+      end
+    end
+
     attr_accessor :accept_subscriptions
-    attr_reader :delivered
+    attr_reader :delivered, :conferences
 
     def initialize
       @delivered = []
+      @conferences = []
     end
 
     def deliver_deferred(*args)
@@ -25,6 +36,7 @@ class JabberTest < Service::TestCase
   def test_push
     svc = service({'user' => 'a,b , c , b', 'muc' => 'e,f , g, f'}, payload)
     svc.im = FakeJabber.new
+    svc.muc_client = FakeJabber::MUCClient.new(svc.im)
     svc.receive_push
 
     assert svc.im.accept_subscriptions

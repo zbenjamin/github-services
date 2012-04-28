@@ -45,8 +45,7 @@ class Service::Jabber < Service
 
     deliver_messages(message, recipients)
 
-    # temporarily disabled
-    #deliver_muc(message, conferences) if !conferences.empty?
+    deliver_muc(message, conferences) if !conferences.empty?
   end
 
   def deliver_messages(message, recipients)
@@ -57,20 +56,20 @@ class Service::Jabber < Service
 
   def deliver_muc(message, conferences)
     conferences.each do |conference|
-      muc = ::Jabber::MUC::MUCClient.new(im.client)
-      muc.join(conference)
+      muc_client.join(conference)
       im.deliver_deferred conference, message, :groupchat
     end
   end
 
-  def mucs
-    @mucs ||= {}
-  end
-
-  attr_writer :im
   def im
     @im || @@im ||= begin
       ::Jabber::Simple.new(secrets['jabber']['user'], secrets['jabber']['password'])
     end
   end
+
+  def muc_client
+    @muc_client ||= ::Jabber::MUC::MUCClient.new(im.client)
+  end
+
+  attr_writer :im, :muc_client
 end
